@@ -51,7 +51,7 @@ conflicts when many modules define the same keys for commands.
 Then, in your program
 ```ruby
 require "cmdserver"
-server = TCPCommandServer.new(1234)
+server = Cmdserver::TCPCommandServer.new(1234)
 server.start()
 ```
 
