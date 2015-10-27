@@ -1,8 +1,8 @@
 # Cmdserver
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/cmdserver`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+Cmdserver gives you the ability to design a very simple command server.
+Simply create a .rb module under `~/.cmdserver/modules/` and override the module `Cmdserver::CmdProtocol`.   
+Fire up your server and you are done! It is ready to respond to the commands you have defined.
 
 ## Installation
 
@@ -22,7 +22,30 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+By default, Cmdserver looks into `~/.cmdserver/modules` for any .rb files present. It then `require`s them into the program.   
+In these .rb files, you override the module `Cmdserver::CmdProtocol` as demonstrated bellow   
+
+```ruby
+module Cmdserver::CmdProtocol
+    def self.extend_protocol
+        @protocol_hash["CustomCommand"] = -> client_socket, arguments { client_socket.puts "You sent: #{arguments}" }
+    end
+
+    def self.default_action(client_socket, arguments)
+        client_socket.puts "#{arguments} - Command not recognized"
+    end
+end
+```
+
+Here we defined `CustomCommand` to be the string that will trigger the execution of the function we presented.
+The first argument passed to the function is the client socket, the second argument `arguments` is a __string__ of whatever
+is left, when we removed `CustomCommand` from the string we initially recieved from the client. This might change in the future.
+For now, argument parsing is left up to the individual functions.   
+
+Also note that overriding the default behaviour can be done only once. The last loaded module that redefines `self.default_action` is what is going to happen, when the command is not recognized. By default, it echoes back whatever it recieves.   
+
+The `@protocol_hash` can be destroied in any module. The hash gets copied into the core on a per-module basis. Note that this can introduce
+conflicts when many modules define the same keys for commands.
 
 ## Development
 
@@ -32,7 +55,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/cmdserver.
+Bug reports and pull requests are welcome on GitHub at https://github.com/majorendian/cmdserver.
 
 
 ## License
