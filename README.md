@@ -22,7 +22,7 @@ Or install it yourself as:
 
 ## Usage
 
-By default, Cmdserver looks into `~/.cmdserver/modules` for any .rb files present. It then `require`s them into the program.   
+By default, Cmdserver looks into `~/.cmdserver/modules` for any .rb files present. It then `require`-s them into the program.   
 In these .rb files, you override the module `Cmdserver::CmdProtocol` as demonstrated bellow   
 
 ```ruby
@@ -44,7 +44,7 @@ For now, argument parsing is left up to the individual functions.
 
 Also note that overriding the default behaviour can be done only once. The last loaded module that redefines `self.default_action` is what is going to happen, when the command is not recognized. By default, it echoes back whatever it recieves.   
 
-The `@protocol_hash` can be destroied in any module. The hash gets copied into the core on a per-module basis. Note that this can introduce
+The `@protocol_hash` can be destroid in any module. The hash gets copied into the core on a per-module basis. Note that this can introduce
 conflicts when many modules define the same keys for commands.
     
 
@@ -59,7 +59,7 @@ That starts the main loop which will then start accepting connections.
 
 ## Development
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake rspec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
 
 To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
 
