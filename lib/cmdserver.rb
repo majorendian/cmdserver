@@ -1,115 +1,134 @@
 require "socket"
 require "pathname"
+require "cmdserver/version"
 
-module CmdProtocol
-    # Protocol stuff goes here.
-    # Should be loaded from ~/.tcpcmdserv/modules/*.rb
-    @protocol_hash = {}
-    def self.extend_protocol()
-        @protocol_hash = {
-            "dummy" => -> cs, args { cs.puts "Dummy reply"}
-        }
+module Cmdserver
+
+    module CmdProtocol
+        # Protocol stuff goes here.
+        # Should be loaded from ~/.cmdserver/modules/*.rb
+        @protocol_hash = {}
+        def self.extend_protocol()
+            @protocol_hash = {
+                "dummy" => -> cs, args { cs.puts "Dummy reply"}
+            }
+        end
+
+        def self.default_action(cs, args)
+            cs.puts args
+        end
+
+        module_function
+        def getProtocolHash()
+            self.extend_protocol()
+            return @protocol_hash
+        end
+
+        # Default behaviour when querry was not found
+        module_function
+        def default(cs, args)
+            # NOTE: args is a String
+            self.default_action(cs, args)
+        end
     end
-    module_function
-    def getProtocolHash()
-        self.extend_protocol()
-        return @protocol_hash
-    end
 
+    class Settings
 
-end
+        def initialize(config_dir="~/.cmdserver/")
+            @workdir = Pathname.new(File.expand_path(config_dir))
+            @config_rc = @workdir + "configrc"
+            @module_dir = @workdir + "modules"
+            if not @workdir.exist?
+                Dir.mkdir @workdir
+                if not @config_rc.exist?
+                    File.new @config_rc, "w"
+                end
+            end
+            if not @module_dir.exist?
+                Dir.mkdir @module_dir
+            end
+            # Load modules contained within the module
+            # directories
+            load_modules()
+        end
 
-class Settings
-
-    def initialize
-        @workdir = Pathname.new(File.expand_path("~/.tcpcmdsrv/"))
-        @config_rc = @workdir + "configrc"
-        @module_dir = @workdir + "modules"
-        if not @workdir.exist?
-            Dir.mkdir @workdir
-            if not @config_rc.exist?
-                File.new @config_rc, "w"
+        def load_modules
+            Dir.glob("#{@module_dir}/*.rb").each do |mod|
+                CmdProtocol.extend_protocol()
+                puts "Loading module: #{mod}"
+                require mod
             end
         end
-        if not @module_dir.exist?
-            Dir.mkdir @module_dir
+    end
+
+    class TCPCommandServer
+
+        attr_accessor :socket
+
+        def initialize(port, hash={}, debug=false)
+            @socket = TCPServer.new(port)
+            @cmd_hash = hash # hash of commands
+            @debug = debug
+            load_cmd_proto()
         end
-    end
 
-    def load_modules
-        Dir.glob("#{@module_dir}/*.rb").each do |mod|
-            CmdProtocol.extend_protocol()
-            puts "Loading module: #{mod}"
-            require mod
+        def load_cmd_proto()
+            phash = CmdProtocol.getProtocolHash()
+            phash.each_key do |key|
+                @cmd_hash[key] = phash[key]
+            end
         end
-    end
-end
 
-class TCPCommandServer
-
-    def initialize(port, hash={}, debug=false)
-        @socket = TCPServer.new(port)
-        puts "Started command server at #{port}"
-        @cmd_hash = hash # hash of commands
-        @debug = debug
-        load_cmd_proto()
-    end
-
-    def load_cmd_proto()
-        phash = CmdProtocol.getProtocolHash()
-        phash.each_key do |key|
-            @cmd_hash[key] = phash[key]
+        def registerCallback(string, aproc)
+            @cmd_hash[string] = aproc
         end
-    end
 
-    def registerCallback(string, aproc)
-        @cmd_hash[string] = aproc
-    end
-
-    def start()
-        loop do
-            client = @socket.accept
-            Thread.new{ process_client(client) }
+        def start()
+            loop do
+                client = @socket.accept
+                Thread.new{ process_client(client) }
+            end
         end
-    end
 
-    def process_client(client)
-        #NOTE: This should remain as an isolated thread process
-        loop do
-            request = client.gets
-            if not request.nil?
-                request.chomp! 
-                puts "Got '#{request}'" if @debug
-                real_key = nil
-                @cmd_hash.each_key do |key|
-                    if request.include? key
-                        real_key = key
-                    end
-                end
-                puts "real_key:#{real_key}" if @debug
-                if not real_key.nil?
-                    begin
-                        request.sub! real_key, ""
-                        if @cmd_hash.key? real_key
-                            request.chomp!
-                            puts "Request after processing: #{request}" if @debug
-                            @cmd_hash[real_key].call(client, request)
+        def process_client(client)
+            #NOTE: This should remain as an isolated thread process
+            loop do
+                request = client.gets
+                if not request.nil?
+                    request.chomp! 
+                    puts "Got '#{request}'" if @debug
+                    real_key = nil
+                    @cmd_hash.each_key do |key|
+                        if request.include? key
+                            real_key = key
                         end
-                    rescue Exception
-                        puts "ERROR: #{$!}"
-                        raise $!
                     end
+                    puts "real_key:#{real_key}" if @debug
+                    if not real_key.nil?
+                        begin
+                            request.sub! real_key, ""
+                            request.chomp!
+                            if @cmd_hash.key? real_key
+                                puts "Request after processing: #{request}" if @debug
+                                @cmd_hash[real_key].call(client, request)
+                            end
+                        rescue Exception
+                            puts "ERROR: #{$!}"
+                            raise $!
+                        end
+                    else
+                        Cmdserver::CmdProtocol.default(client, request)
+                    end
+                else
+                    client.close()
+                    break
                 end
-            else
-                client.close()
-                break
             end
         end
     end
 end
 
 
-settings = Settings.new()
-settings.load_modules()
-server = TCPCommandServer.new(2121, {}, false)
-server.start()
+#settings = Settings.new()
+#server = TCPCommandServer.new(2121, {}, false)
+#server.start()
