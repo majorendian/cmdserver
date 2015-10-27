@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Ernest Deák"]
   spec.email         = ["gordon.zar@gmail.com"]
 
-  spec.summary       = %q{Simple remote command execution server over tcp.}
+  spec.summary       = %q{Simple, module based command execution server over tcp.}
   #spec.description   = %q{TODO: Write a longer description or delete this line.}
   #spec.homepage      = "TODO: Put your gem's website or public repo URL here."
   spec.license       = "MIT"
