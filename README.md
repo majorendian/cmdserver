@@ -46,6 +46,16 @@ Also note that overriding the default behaviour can be done only once. The last 
 
 The `@protocol_hash` can be destroied in any module. The hash gets copied into the core on a per-module basis. Note that this can introduce
 conflicts when many modules define the same keys for commands.
+    
+
+Then, in your program
+```ruby
+require "cmdserver"
+server = TCPCommandServer.new(1234)
+server.start()
+```
+
+That starts the main loop which will then start accepting connections.   
 
 ## Development
 
