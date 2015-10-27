@@ -65,7 +65,10 @@ module Cmdserver
 
         attr_accessor :socket
 
-        def initialize(port, hash={}, debug=false)
+        def initialize(port, settings=nil, hash={}, debug=false)
+            if settings.nil?
+                @settings = Settings.new()
+            end
             @socket = TCPServer.new(port)
             @cmd_hash = hash # hash of commands
             @debug = debug
@@ -129,6 +132,5 @@ module Cmdserver
 end
 
 
-#settings = Settings.new()
 #server = TCPCommandServer.new(2121, {}, false)
 #server.start()
