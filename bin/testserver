@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+
+require "bundler/setup"
+require "cmdserver"
+
+server = Cmdserver::TCPCommandServer.new(2121)
+server.start()

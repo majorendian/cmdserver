@@ -36,7 +36,7 @@ module Cmdserver
 
         def initialize(config_dir="~/.cmdserver/")
             @workdir = Pathname.new(File.expand_path(config_dir))
-            @config_rc = @workdir + "configrc"
+            @config_rc = @workdir + "config" # Configuration file currently unused
             @module_dir = @workdir + "modules"
             if not @workdir.exist?
                 Dir.mkdir @workdir
@@ -65,14 +65,14 @@ module Cmdserver
 
         attr_accessor :socket
 
-        def initialize(port, settings=nil, hash={}, debug=false)
+        def initialize(port, hash={}, settings=nil, debug=false)
+            @socket = TCPServer.new(port)
+            @cmd_hash = hash # hash of commands
+            load_cmd_proto()
+            @debug = debug
             if settings.nil?
                 @settings = Settings.new()
             end
-            @socket = TCPServer.new(port)
-            @cmd_hash = hash # hash of commands
-            @debug = debug
-            load_cmd_proto()
         end
 
         def load_cmd_proto()
@@ -110,6 +110,7 @@ module Cmdserver
                     if not real_key.nil?
                         begin
                             request.sub! real_key, ""
+                            request.lstrip!
                             request.chomp!
                             if @cmd_hash.key? real_key
                                 puts "Request after processing: #{request}" if @debug
