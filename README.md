@@ -57,6 +57,19 @@ server.start()
 
 That starts the main loop which will then start accepting connections.   
 
+You then connect to the specified port (1234 in our case) and write `CustomCommand`. The server will
+then execute your function.   
+
+The functions can also be specified in the constructor itself as a hash:   
+
+```ruby
+require "cmdserver"
+server = Cmdserver::TCPCommandServer.new(1234, {
+    "CustomCommand" => -> client, args { client.puts "Running custom command" }
+})
+server.start()
+```
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
@@ -65,7 +78,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/majorendian/cmdserver.
+Bug reports and pull requests are welcome on GitHub at https://github.com/majorendian/Modular-Tcp-Command-Server
 
 
 ## License
