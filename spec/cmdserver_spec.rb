@@ -35,16 +35,16 @@ describe Cmdserver do
 
 
     it "can create a tcp command server object" do
-        @server = Cmdserver::TCPCommandServer.new(2121)
+        @server = Cmdserver::TCPCommandServer.new(2123)
         @server.should be_an_instance_of Cmdserver::TCPCommandServer
         @server.socket.close()
         @server = nil
     end
 
     it "can respond to the 'dummy' querry" do
-        server = Cmdserver::TCPCommandServer.new(2121)
+        server = Cmdserver::TCPCommandServer.new(2122)
         thr = Thread.new { server.start() }
-        client = TCPSocket.new("localhost",2121)
+        client = TCPSocket.new("localhost",2122)
         client.puts "dummy"
         response = client.gets
         response.chomp!
@@ -78,9 +78,9 @@ describe Cmdserver do
                 cs.puts "No such command"
             end
         end
-        server = Cmdserver::TCPCommandServer.new 2222
+        server = Cmdserver::TCPCommandServer.new 2223
         thr = Thread.new { server.start }
-        client = TCPSocket.new "localhost", 2222
+        client = TCPSocket.new "localhost", 2223
 
         client.puts "extension"
         response = client.gets
@@ -97,5 +97,40 @@ describe Cmdserver do
 
         expect(response).to eq("Extended!")
         expect(last_defined_default).to eq("No such command")
+
+    end
+    it "accepts Cmdserver::Command derived classes and any classes with a 'call' method" do
+        class MyCommand < Cmdserver::Command
+            def call(cs, args)
+                cs.puts "Something something #{args}"
+            end
+        end
+
+        class CustomClass
+            def call(cs, args)
+                cs.puts "Unrelated class"
+            end
+        end
+
+        command = MyCommand.new()
+        unrel = CustomClass.new()
+
+        server = Cmdserver::TCPCommandServer.new 2222, { "sillyness" => command, "unrel" => unrel }
+        thr = Thread.new { server.start }
+        client = TCPSocket.new "localhost", 2222
+
+        client.puts "sillyness one"
+        response = client.gets
+        response.chomp!
+        client.puts "unrel"
+        response_2 = client.gets
+        response_2.chomp!
+
+        server.socket.close()
+        thr.kill()
+        server = nil
+
+        expect(response).to eq("Something something one")
+        expect(response_2).to eq("Unrelated class")
     end
 end
