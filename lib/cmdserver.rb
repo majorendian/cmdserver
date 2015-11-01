@@ -8,10 +8,12 @@ module Cmdserver
         # Protocol stuff goes here.
         # Should be loaded from ~/.cmdserver/modules/*.rb
         @protocol_hash = {}
+        @protocol = @protocol_hash
         def self.extend_protocol()
-            @protocol_hash = {
+            @protocol = {
                 "dummy" => -> cs, args { cs.puts "Dummy reply"}
             }
+            @protocol_hash = @protocol
         end
 
         def self.default_action(cs, args)
@@ -19,9 +21,10 @@ module Cmdserver
         end
 
         module_function
-        def getProtocolHash()
+        def get_protocol_hash()
             self.extend_protocol()
-            return @protocol_hash
+            @protocol = @protocol_hash
+            return @protocol
         end
 
         # Default behaviour when querry was not found
@@ -61,6 +64,16 @@ module Cmdserver
         end
     end
 
+    class Command # Class provided for the possibilty of future extensibility
+        def initialize
+        end
+
+        def call(client_socket, arg_string)
+            client_socket.puts "Dummy command call"
+        end
+
+    end
+
     class TCPCommandServer
 
         attr_accessor :socket
@@ -76,7 +89,7 @@ module Cmdserver
         end
 
         def load_cmd_proto()
-            phash = CmdProtocol.getProtocolHash()
+            phash = CmdProtocol.get_protocol_hash()
             phash.each_key do |key|
                 @cmd_hash[key] = phash[key]
             end
