@@ -5,22 +5,22 @@ require "cmdserver/version"
 module Cmdserver
 
     module CmdProtocol
+        extend self
         # Protocol stuff goes here.
         # Should be loaded from ~/.cmdserver/modules/*.rb
         @protocol_hash = {}
         @protocol = @protocol_hash
-        def self.extend_protocol()
+        def extend_protocol()
             @protocol = {
                 "dummy" => -> cs, args { cs.puts "Dummy reply"}
             }
             @protocol_hash = @protocol
         end
 
-        def self.default_action(cs, args)
+        def default_action(cs, args)
             cs.puts args
         end
 
-        module_function
         def get_protocol_hash()
             self.extend_protocol()
             @protocol = @protocol_hash
@@ -28,14 +28,18 @@ module Cmdserver
         end
 
         # Default behaviour when querry was not found
-        module_function
         def default(cs, args)
             # NOTE: args is a String
             self.default_action(cs, args)
         end
+
     end
 
     class Settings
+
+        attr_accessor :module_dir
+        attr_accessor :config_rc
+        attr_accessor :workdir
 
         def initialize(config_dir="~/.cmdserver/")
             @workdir = Pathname.new(File.expand_path(config_dir))
@@ -52,7 +56,6 @@ module Cmdserver
             end
             # Load modules contained within the module
             # directories
-            load_modules()
         end
 
         def load_modules
@@ -62,6 +65,16 @@ module Cmdserver
                 require mod
             end
         end
+    end
+
+    class CustomSettings < Settings
+
+        def initialize(workdir, config_rc, module_dir)
+            @workdir = workdir
+            @config_rc = config_rc
+            @module_dir = module_dir
+        end
+            
     end
 
     class Command # Class provided for the possibilty of future extensibility
@@ -81,11 +94,13 @@ module Cmdserver
         def initialize(port, hash={}, settings=nil, debug=false)
             @socket = TCPServer.new(port)
             @cmd_hash = hash # hash of commands
+            @settings = settings
             load_cmd_proto()
             @debug = debug
-            if settings.nil?
+            if @settings.nil?
                 @settings = Settings.new()
             end
+            @settings.load_modules()
         end
 
         def load_cmd_proto()
@@ -144,7 +159,3 @@ module Cmdserver
         end
     end
 end
-
-
-#server = TCPCommandServer.new(2121, {}, false)
-#server.start()
