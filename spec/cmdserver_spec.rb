@@ -17,11 +17,11 @@ describe Cmdserver do
     end
 
     it "has a protocol" do
-        expect(Cmdserver::CmdProtocol).not_to be nil
+        expect(Cmdserver::Cmdprotocol).not_to be nil
     end
 
     it "has a default behaviour function for the protocol" do
-        expect(Cmdserver::CmdProtocol.respond_to? "default").not_to be nil
+        expect(Cmdserver::Cmdprotocol.respond_to? "default").not_to be nil
     end
 
     it "can create a settings object" do
@@ -69,16 +69,16 @@ describe Cmdserver do
     end
 
     it "can be easily overriden and extended" do
-        module Cmdserver::CmdProtocol
+        module Cmdserver::Cmdprotocol
             def self.extend_protocol()
-                @protocol_hash["extension"] = -> cs, args { cs.puts "Extended!" }
+                @protocol["extension"] = -> cs, args { cs.puts "Extended!" }
             end
 
             def self.default_action(cs, args)
                 cs.puts "No such command"
             end
         end
-        server = Cmdserver::TCPCommandServer.new 2223
+        server = Cmdserver::TCPCommandServer.new 2223, {}, settings=nil, debug=true
         thr = Thread.new { server.start }
         client = TCPSocket.new "localhost", 2223
 
@@ -133,4 +133,23 @@ describe Cmdserver do
         expect(response).to eq("Something something one")
         expect(response_2).to eq("Unrelated class")
     end
+end
+
+describe Cmdserver::Templates do
+    template_class = nil
+    it "has a basic template class that has a template body" do
+        template_class = Cmdserver::Templates::BasicTemplate.new()
+        template_class.should be_an_instance_of Cmdserver::Templates::BasicTemplate
+    end
+
+    it "template body of the template class defines a module" do
+        template_class.body.should match /^module Cmdserver::Cmdprotocol$/
+    end
+
+end
+
+describe Cmdserver::CLI do
+    
+    #TODO: Write tests for Cmdserver::CLI
+
 end

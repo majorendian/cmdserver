@@ -28,7 +28,7 @@ In these .rb files, you override the module `Cmdserver::CmdProtocol` as demonstr
 ```ruby
 module Cmdserver::CmdProtocol
     def self.extend_protocol
-        @protocol_hash["CustomCommand"] = -> client_socket, arguments { client_socket.puts "You sent: #{arguments}" }
+        @protocol["CustomCommand"] = -> client_socket, arguments { client_socket.puts "You sent: #{arguments}" }
     end
 
     def self.default_action(client_socket, arguments)
@@ -44,7 +44,7 @@ For now, argument parsing is left up to the individual functions.
 
 Also note that overriding the default behaviour can be done only once. The last loaded module that redefines `self.default_action` is what is going to happen, when the command is not recognized. By default, it echoes back whatever it recieves.   
 
-The `@protocol_hash` can be destroid in any module. The hash gets copied into the core on a per-module basis. Note that this can introduce
+The `@protocol` can be destroid in any module. The hash gets copied into the core on a per-module basis. Note that this can introduce
 conflicts when many modules define the same keys for commands.
     
 

@@ -6,22 +6,17 @@ require "cmdserver"
 
 DEFAULT_WORKDIR = "~/.cmdserver"
 DEFAULT_MODULE_DIR = DEFAULT_WORKDIR + "/modules"
-DEFAULT_CONFIG = DEFAULT_WORKDIR + "/config"
 
 options = {
     :workdir => DEFAULT_WORKDIR,
     :module_dir => DEFAULT_MODULE_DIR,
-    :config => DEFAULT_CONFIG,
+    :debug => false,
 }
 optparse = OptionParser.new do |opts|
     opts.banner = <<"HELP"
 Usage: cmdserver [options]
 HELP
 
-    opts.on("-c", "--config CONFIG_FILE", "Load configuration from file") do |config_file|
-        options[:config] = config_file
-    end
-    
     opts.on("-d", "--daemon", "Daemonize process") do
         options[:daemon] = true
     end
@@ -30,8 +25,17 @@ HELP
         options[:port] = portarg
     end
 
-    opts.on("-m", "--module-dir MODULE_DIR", "Load modules from MODULE_DIR of ~/.cmdserver/modules" ) do |module_dir|
+    opts.on("-m", "--module-dir MODULE_DIR", "Load modules from MODULE_DIR instead of ~/.cmdserver/modules" ) do |module_dir|
         options[:module_dir] = module_dir
+    end
+
+    opts.on("--skel", "Dumps a simple module template to standard output.") do
+        puts Cmdserver::Templates::BasicTemplate.new().body
+        exit
+    end
+
+    opts.on("--debug", "Turn on debugging information.") do
+        options[:debug] = true
     end
 
     opts.on("-h", "--help", "Display this help message") do
@@ -43,17 +47,18 @@ end
 optparse.parse!
 
 
-custom_settings = Cmdserver::CustomSettings.new(options[:workdir], options[:config], options[:module_dir])
-port = options[:port] ? options[:port] : 2222
-server = Cmdserver::TCPCommandServer.new(port, {}, settings=custom_settings)
+custom_settings = Cmdserver::CustomSettings.new(options)
+port = options[:port] 
+if port.nil?
+    puts "Port required.\nSee --help"
+    exit(1)
+end
+server = Cmdserver::TCPCommandServer.new(port, {}, settings=custom_settings, debug=options[:debug])
 
 begin
     if options[:daemon]
-        pid = fork
-        if not pid
-            #child
-            server.start()
-        end
+        daem = Cmdserver::CLI::ServerDaemonizer.new(server)
+        daem.daemonize()
     else
         server.start()
     end
