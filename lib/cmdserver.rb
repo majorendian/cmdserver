@@ -9,8 +9,8 @@ module Cmdserver
 
     class Settings# {{{
 
-        attr_accessor :module_dir
-        attr_accessor :workdir
+        attr_reader :module_dir
+        attr_reader :workdir
 
         def initialize(work_dir="~/.cmdserver/")
             @workdir = Pathname.new(File.expand_path(work_dir))
@@ -38,8 +38,13 @@ module Cmdserver
 
         def initialize(options)
             @workdir = options[:workdir]
-            @module_dir = options[:module_dir]
-            super(work_dir=@workdir)
+            if not @workdir.nil?
+                super(work_dir=@workdir)
+            else
+                super()
+            end
+            @module_dir = options[:module_dir] if options[:module_dir]
+            puts @module_dir
         end
     end# }}}
 
@@ -56,7 +61,7 @@ module Cmdserver
     class TCPCommandServer# {{{
 
         attr_accessor :socket
-        attr_accessor :settings
+        attr_reader :settings
         attr_writer :reload_settings
 
         def initialize(port, hash={}, settings=nil, debug=false)
@@ -88,13 +93,17 @@ module Cmdserver
         # "Private" schelued updater.
         # Allows for loading of modules
         # without having to restart the server
-        def _updater_
+        def _update_loop_
             loop do
                 sleep 2
-                if @reload_settings
-                    @settings.load_modules()
-                    @reload_settings = false
-                end
+                _update_()
+            end
+        end
+
+        def _update_
+            if @reload_settings
+                @settings.load_modules()
+                @reload_settings = false
             end
         end
 
@@ -102,10 +111,16 @@ module Cmdserver
         # and the socket => thread loop
         def start()
             # Start the local updater
-            Thread.new{ _updater_ }
+            Thread.new{ _update_loop_() }
             loop do
                 begin
                     client = @socket.accept
+                    # update so that clients get the updated module
+                    # prevents race condition between connection
+                    # and the updater loop
+                    # Thanks to the variable, the modules will not get
+                    # loaded twice in a single update
+                    _update_() 
                 rescue SystemCallError
                     exit -1
                 end
@@ -118,6 +133,8 @@ module Cmdserver
             #NOTE: This should remain as an isolated thread process
             loop do
                 request = client.gets
+                # TODO:
+                # request = Cmdserver::Connection.client_to_server(request)
                 if not request.nil?
                     request.chomp!
                     puts "Got '#{request}'" if @debug
@@ -128,7 +145,7 @@ module Cmdserver
                         end
                     end
                     puts "real_key:#{real_key}" if @debug
-                    if not real_key.nil?
+                    if not real_key.nil? and request.start_with? real_key
                         begin
                             request.sub! real_key, ""
                             request.lstrip!

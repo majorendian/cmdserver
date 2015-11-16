@@ -1,6 +1,7 @@
 module Cmdserver::CLI
 
     DAEMON_NAME = "cmdserver"
+    DAEMON_LOGFILE = "cmdserver.log"
 
     class Daemonizer
         def initialize()
@@ -21,14 +22,18 @@ module Cmdserver::CLI
             pid = fork
             if not pid
                 #child
-                $0=DAEMON_NAME
-                Process.setsid
-                Signal.trap("HUP", proc { _handle_sighup } ) 
-                Signal.trap("TERM", proc { _handle_sigterm } )
+                daemon_preparation()
                 @dprocess.call()
                 puts "Server started."
             end
             return pid
+        end
+
+        def daemon_preparation
+            $0 = DAEMON_NAME
+            Process.setsid
+            Signal.trap("HUP", proc { _handle_sighup } ) 
+            Signal.trap("TERM", proc { _handle_sigterm } )
         end
 
         def _handle_sighup()
@@ -45,6 +50,13 @@ module Cmdserver::CLI
             super()
             @server = server
             @dprocess = -> { server.start() }
+        end
+
+        def daemon_preparation
+            super()
+            logpath = Pathname.new(@server.settings.workdir) + Pathname.new(DAEMON_LOGFILE)
+            $stdout.reopen(logpath, "a")
+            $stderr = $stdout
         end
 
         # NOTE: Could use some logging mechanism...

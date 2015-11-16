@@ -10,7 +10,13 @@ Gem::Specification.new do |spec|
   spec.email         = ["gordon.zar@gmail.com"]
 
   spec.summary       = %q{Simple, module based command execution server over tcp.}
-  #spec.description   = %q{TODO: Write a longer description or delete this line.}
+  spec.description   = %q{
+    `cmdserver' is a simple, multi-threaded, module based and extensible command server with a straight forward API.
+    Much of the functionality relies on ruby's ability to override module definitions at runtime. This, in turn
+    becomes the servers protocol. Read the documentation further details.
+
+    Gem includes a binary with a simple template file for getting started with writting protocol extension modules.
+  }
   spec.homepage      = "https://github.com/majorendian/Modular-Tcp-Command-Server"
   spec.license       = "MIT"
 
@@ -28,6 +34,6 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_development_dependency "bundler", ">= 1.7"
-  spec.add_development_dependency "rake", "~> 10.0"
+  spec.add_development_dependency "rake", ">= 10.0"
   spec.add_development_dependency "rspec"
 end

@@ -4,12 +4,7 @@ require "optparse"
 require "bundler/setup"
 require "cmdserver"
 
-DEFAULT_WORKDIR = "~/.cmdserver"
-DEFAULT_MODULE_DIR = DEFAULT_WORKDIR + "/modules"
-
 options = {
-    :workdir => DEFAULT_WORKDIR,
-    :module_dir => DEFAULT_MODULE_DIR,
     :debug => false,
 }
 optparse = OptionParser.new do |opts|
@@ -25,7 +20,11 @@ HELP
         options[:port] = portarg
     end
 
-    opts.on("-m", "--module-dir MODULE_DIR", "Load modules from MODULE_DIR instead of ~/.cmdserver/modules" ) do |module_dir|
+    opts.on("-w", "--workdir WORKDIR", "Active working directory. '~/.cmdserver/' by default.\n\t\t\t\t\tWithout -m specified, module directory is set to 'WORKDIR/modules'.\n\t\t\t\t\tThis directory is also where 'cmdserver.log' gets created.") do |workdir| 
+        options[:workdir] = workdir
+    end
+
+    opts.on("-m", "--module-dir MODULE_DIR", "Load modules from MODULE_DIR instead of '~/.cmdserver/modules'" ) do |module_dir|
         options[:module_dir] = module_dir
     end
 
@@ -40,6 +39,11 @@ HELP
 
     opts.on("-h", "--help", "Display this help message") do
         puts opts
+        exit
+    end
+
+    opts.on("-v", "--version", "Display version information and exit") do
+        puts Cmdserver::VERSION
         exit
     end
 end

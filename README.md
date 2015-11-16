@@ -44,7 +44,7 @@ For now, argument parsing is left up to the individual functions.
 
 Also note that overriding the default behaviour can be done only once. The last loaded module that redefines `self.default_action` is what is going to happen, when the command is not recognized. By default, it echoes back whatever it recieves.   
 
-The `@protocol` can be destroid in any module. The hash gets copied into the core on a per-module basis. Note that this can introduce
+The `@protocol` can be destroied in any module. The hash gets copied into the core on a per-module basis. Note that this can introduce
 conflicts when many modules define the same keys for commands.
     
 

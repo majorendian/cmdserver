@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'socket'
 require 'pathname'
 
-describe Cmdserver do
+describe Cmdserver do# {{{
 
     it 'has a version number' do
         expect(Cmdserver::VERSION).not_to be nil
@@ -78,7 +78,7 @@ describe Cmdserver do
                 cs.puts "No such command"
             end
         end
-        server = Cmdserver::TCPCommandServer.new 2223, {}, settings=nil, debug=true
+        server = Cmdserver::TCPCommandServer.new 2223, {}, settings=nil, debug=false
         thr = Thread.new { server.start }
         client = TCPSocket.new "localhost", 2223
 
@@ -133,9 +133,10 @@ describe Cmdserver do
         expect(response).to eq("Something something one")
         expect(response_2).to eq("Unrelated class")
     end
-end
 
-describe Cmdserver::Templates do
+end# }}}
+
+describe Cmdserver::Templates do# {{{
     template_class = nil
     it "has a basic template class that has a template body" do
         template_class = Cmdserver::Templates::BasicTemplate.new()
@@ -146,10 +147,13 @@ describe Cmdserver::Templates do
         template_class.body.should match /^module Cmdserver::Cmdprotocol$/
     end
 
-end
+end# }}}
 
-describe Cmdserver::CLI do
+describe Cmdserver::CLI do# {{{
     
     #TODO: Write tests for Cmdserver::CLI
+    # Might be a bit more difficult then expected.
+    # Seems to be some issue with forking in a .spec
+    # file with rSpec
 
-end
+end# }}}
