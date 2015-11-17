@@ -4,7 +4,7 @@ Cmdserver gives you the ability to design a very simple command server.
 Simply create a .rb module under `~/.cmdserver/modules/` and override the module `Cmdserver::Cmdprotocol`.   
 Fire up your server and you are done! It is ready to respond to the commands you have defined.  
 
-From version 1.0.0 the `cmdserver` executable is provided for even faster development startup. Please read the __Using 'cmdserver'__ section to learn more.
+From version 1.0.0 the `cmdserver` executable is provided for even faster development startup. Please read the __Using 'cmdserver'__ section to learn more. Also, `@protocol_hash` has been renamed to `@protocol` and `Cmdserver::CmdProtocol` to `Cmdserver::Cmdprotocol` so make sure to introduce these changes to your own modules or otherwise they will not load properly.
 
 ## Future plans
 
