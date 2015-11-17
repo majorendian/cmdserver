@@ -26,7 +26,7 @@ module Cmdserver
         end
 
         def load_modules
-            Dir.glob("#{@module_dir}/*.rb").each do |mod|
+            Dir.glob("#{@module_dir}/**/*.rb").each do |mod|
                 Cmdserver::Cmdprotocol.extend_protocol()
                 puts "Loading module: #{mod}"
                 require mod
@@ -44,7 +44,6 @@ module Cmdserver
                 super()
             end
             @module_dir = options[:module_dir] if options[:module_dir]
-            puts @module_dir
         end
     end# }}}
 

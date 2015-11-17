@@ -1,13 +1,16 @@
 module Cmdserver::Templates
     class BasicTemplate
 
-        attr_accessor :body
+        attr_reader :body
 
         def initialize
             @body = <<TEMPLATE
 module Cmdserver::Cmdprotocol
     def self.extend_protocol()
-        # Replace the bellow with your own functions
+        # Replace the bellow with your own commands.
+        # Each key is a command your server will accept and
+        # call the Proc or Command associated with it.
+        # 'Command' can also be a class as long as it has a 'call' method
         @protocol["extension"] = -> client_socket, argument { client_socket.puts "Command recieved" }
     end
 
